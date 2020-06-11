@@ -1,0 +1,31 @@
+[package]
+name = "de_pa2_rust_tests"
+version = "0.0.1"
+authors = [ "Patrick Stricker <rust@patrick.stricker.one>" ]
+edition = "2018"
+
+[dependencies]
+# ssh connection
+ssh2 = "0.8"
+
+# csv parsing
+csv = "1.1"
+
+# mapping csv to objects
+# The core APIs, including the Serialize and Deserialize traits. Always
+# required when using Serde. The "derive" feature is only required when
+# using #[derive(Serialize, Deserialize)] to make Serde work with structs
+# and enums defined in your crate.
+serde = { version = "1.0", features = ["derive"] }
+
+# prometheus
+prometheus_exporter_base = "0.30.3"
+
+#futures = "0.3.0"
+futures        = "0.1.25"
+
+tokio = { version = "0.2", features = ["full"] }
+
+log                  = "0.4.8"
+env_logger           = "0.7.1"
+clap                 = "2.33.0"
