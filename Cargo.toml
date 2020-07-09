@@ -4,6 +4,16 @@ version = "0.0.1"
 authors = [ "Patrick Stricker <rust@patrick.stricker.one>" ]
 edition = "2018"
 
+[[bin]]
+name = "ssh-prometheus-exporter"
+path = "src/bin/rust-prometheus-http-exporter.rs"
+#path = "src/main.rs"
+
+#[[bin]]
+#name = "ssh-prometheus-exporter"
+#test = false
+#bench = false
+
 [dependencies]
 # ssh connection
 ssh2 = "0.8"
