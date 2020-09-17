@@ -1,6 +1,6 @@
 [package]
-name = "de_pa2_rust_tests"
-version = "0.0.1"
+name = "ssh-prometheus-exporter"
+version = "0.1.0"
 authors = [ "Patrick Stricker <rust@patrick.stricker.one>" ]
 edition = "2018"
 
@@ -38,4 +38,4 @@ tokio = { version = "0.2", features = ["full"] }
 
 log                  = "0.4.8"
 env_logger           = "0.7.1"
-clap                 = "2.33.0"
+clap                 = "2.33.3"

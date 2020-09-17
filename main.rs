@@ -4,13 +4,13 @@ extern crate ssh2;
 
 mod ssh;
 
-use std::net::TcpStream;
+//use std::net::TcpStream;
 //use std::path::Path;
-use ssh2::Session;
+//use ssh2::Session;
 //use std::io::Read;
 use std::str;
 
-use serde::Deserialize;
+//use serde::Deserialize;
 use std::error::Error;
 //use std::io;
 use std::process;
@@ -21,7 +21,7 @@ use std::fs::File;
 //use std::io::{BufRead, BufReader, Write};
 use std::io::BufReader;
 
-use prometheus_exporter_base::{render_prometheus, MetricType, PrometheusMetric};
+//use prometheus_exporter_base::{render_prometheus, MetricType, PrometheusMetric};
 use std::fs::read_dir;
 
 /*fn exec(_command: &str, _session: &Session) -> String {

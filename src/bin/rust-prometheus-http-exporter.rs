@@ -1,8 +1,8 @@
-extern crate de_pa2_rust_tests;
+extern crate ssh_prometheus_exporter;
 
 use clap::{crate_authors, crate_name, crate_version, Arg};
-use de_pa2_rust_tests::ssh;
-use log::{info, trace};
+use ssh_prometheus_exporter::ssh;
+use log::{info, trace, error};
 use prometheus_exporter_base::{render_prometheus, MetricType, PrometheusMetric};
 use serde::Deserialize;
 use std::env;
@@ -27,10 +27,12 @@ struct Endpoint {
     usage: String
 }
 
+// https://www.dev-notes.eu/2020/03/Return-a-Result-Type-from-the-Main-Function-in-Rust/
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), &'static str>{
     let matches = clap::App::new(crate_name!())
         .version(crate_version!())
+        //.about(crate_description!())
         .author(crate_authors!("\n"))
         .arg(
             Arg::with_name("port")
@@ -44,6 +46,12 @@ async fn main() {
                 .short("v")
                 .help("verbose logging")
                 .takes_value(false),
+        )
+        .arg(
+            Arg::with_name("endpoints")
+                .short("e")
+                .help("endpoints csv file (identifier,hostname,port,username,password,usage)")
+                .takes_value(true),
         )
         .get_matches();
 
@@ -60,7 +68,9 @@ async fn main() {
     }
     env_logger::init();
 
-    info!("using matches: {:?}", matches);
+    let endpoints = matches.value_of("endpoints").unwrap();
+
+    info!("using matches: {:?}", &matches);
 
     let bind = matches.value_of("port").unwrap();
     let bind = u16::from_str_radix(&bind, 10).expect("port must be a valid number");
@@ -68,7 +78,18 @@ async fn main() {
 
     info!("starting exporter on {}", addr);
 
-    render_prometheus(addr, MyOptions::default(), |request, options| {
+    //let endpointsAvailable = matches.is_present("endpoints");
+    //let endpoints = matches.value_of("endpoints");
+    /*if endpoints == ''
+    {
+        error!("specify endpoints file");
+        //std::process::exit(1);
+        return Err("missing endpoints file")
+    }*/
+    //let endpoints: &'static str = matches.value_of("endpoints").unwrap();
+    //let endpoints = endpoints.unwrap();
+    
+    render_prometheus(addr, MyOptions::default(), move |request, options| {
         async move {
             trace!(
                 "in our render_prometheus(request == {:?}, options == {:?})",
@@ -76,7 +97,7 @@ async fn main() {
                 options
             );
 
-            let endpoints = "/Users/pa/Nextcloud/basteln/rust-ssh-client/endpoints.csv";
+            //let endpoints = "/Users/pa/Nextcloud/basteln/rust-ssh-client/endpoints.csv";
 
             let input = File::open(endpoints).unwrap();
 
@@ -136,4 +157,5 @@ async fn main() {
         }
     })
     .await;
+    Ok(())
 }

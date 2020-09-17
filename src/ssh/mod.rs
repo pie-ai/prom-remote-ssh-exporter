@@ -8,6 +8,9 @@ pub fn connect(_hostname: &str, _port: &i32, _username: &str, _password: &str) -
     let addr = format!("{}:{}", _hostname, _port);
     let tcp = TcpStream::connect(addr).unwrap();
     let mut sess = Session::new().unwrap();
+
+    println!("connect: {}", _hostname);
+
     sess.set_tcp_stream(tcp);
     sess.handshake().unwrap();
 
@@ -21,7 +24,7 @@ pub fn exec(_command: &str, _session: &Session) -> String {
     channel.exec(_command).unwrap();
     let mut s = String::new();
     channel.read_to_string(&mut s).unwrap();
-    channel.wait_close();
+    channel.wait_close().map_err(|err| println!("{:?}", err)).ok();
     return s;
 }
 
