@@ -28,7 +28,8 @@ RUN cargo add tokio@0.2
 RUN sed -i 's#tokio = "0.2"#tokio = { version = "0.2", features = ["full"] }#' Cargo.toml
 RUN cargo add log@0.4.8
 RUN cargo add env_logger@0.7.1
-RUN cargo add clap@2.33.3
+#RUN cargo add clap@2.33.3
+RUN cargo add pico-args@0.3.4
 RUN cat Cargo.toml
 RUN echo "fn main() {}" > main.rs
 RUN cargo build

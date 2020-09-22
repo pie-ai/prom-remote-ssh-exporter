@@ -1,8 +1,11 @@
 extern crate ssh_prometheus_exporter;
 
-use clap::{crate_authors, crate_name, crate_version, Arg};
+//use clap::{crate_authors, crate_name, crate_version, Arg};
+// use climake::{Argument, CLIMake, DataType};
+
 use ssh_prometheus_exporter::ssh;
-use log::{info, trace, error};
+use log::{info, trace};
+//, error};
 use prometheus_exporter_base::{render_prometheus, MetricType, PrometheusMetric};
 use serde::Deserialize;
 use std::env;
@@ -10,6 +13,10 @@ use std::fs::File;
 use std::io::BufReader;
 
 use ssh::LoadAverage;
+//use std::path::PathBuf;
+//use std::convert::TryInto;
+//use std::any::Any;
+//use std::borrow::Borrow;
 
 #[derive(Debug, Clone, Default)]
 struct MyOptions {}
@@ -27,10 +34,18 @@ struct Endpoint {
     usage: String
 }
 
+struct Args {
+    help: bool,
+    verbose: bool,
+    endpoints: String,
+    port: u16
+}
+
 // https://www.dev-notes.eu/2020/03/Return-a-Result-Type-from-the-Main-Function-in-Rust/
 #[tokio::main]
 async fn main() -> Result<(), &'static str>{
-    let matches = clap::App::new(crate_name!())
+    /*
+     let matches = clap::App::new(crate_name!())
         .version(crate_version!())
         //.about(crate_description!())
         .author(crate_authors!("\n"))
@@ -54,7 +69,7 @@ async fn main() -> Result<(), &'static str>{
                 .takes_value(true),
         )
         .get_matches();
-
+    let tmp = matches.value_of("endpoints");
     if matches.is_present("verbose") {
         env::set_var(
             "RUST_LOG",
@@ -66,15 +81,82 @@ async fn main() -> Result<(), &'static str>{
             format!("folder_size=info,{}=info", crate_name!()),
         );
     }
+
+    let mut endpoints: &str = "foo.txt";//matches.value_of("endpoints").unwrap();
+
+    if matches.is_present("endpoints") {
+        endpoints = tmp.unwrap();
+    }
+*/
+
+
+    /*
+    let arg_endpoints = Argument::new(
+        &['e'],
+        &["endpoints"],
+        Some("endpoints csv file"),
+        DataType::Files,
+    ).unwrap();
+    let arg_verbose =  Argument::new(
+        &['v'],
+        &["verbose"],
+        Some("verbose mode on"),
+        DataType::None,
+    ).unwrap();
+    let args = &[arg_endpoints,arg_verbose];
+
+    let cli = CLIMake::new(args, Some("PA's Rust Prometheus Exporter"), None).unwrap();
+    let args = cli.parse();
+    let mut verbose = false;
+    let mut endpoints: Vec<PathBuf> = Vec::new();
+    for arg in &args {
+        let argument arg.argument;
+        match argument
+        {
+            arg_verbose=> verbose = true,
+            arg_endpoints=>
+                {
+                    match arg.passed_data
+                    {
+                        File => verbose = false
+                    }
+                }
+        }
+
+
+        println!("{}", arg.argument.help.unwrap());
+    }
+
+    println!("Args used: {:#?}", cli.parse());
+    */
+    let mut args = pico_args::Arguments::from_env();
+    let args = Args {
+        help: args.contains(["-h", "--help"]),
+        verbose: args.contains(["-v", "--verbose"]),
+        endpoints: args.value_from_str("--endpoints").unwrap(),
+        port: 6660
+    };
+
+    if args.verbose
+    {
+        env::set_var(
+            "RUST_LOG",
+            format!("folder_size=trace,{}=trace", "prometheus-exporter"),
+        );
+    } else {
+        env::set_var(
+            "RUST_LOG",
+            format!("folder_size=info,{}=info", "prometheus-exporter"),
+        );
+    }
+
     env_logger::init();
 
-    let endpoints = matches.value_of("endpoints").unwrap();
+    //info!("using matches: {:?}", &matches);
 
-    info!("using matches: {:?}", &matches);
-
-    let bind = matches.value_of("port").unwrap();
-    let bind = u16::from_str_radix(&bind, 10).expect("port must be a valid number");
-    let addr = ([0, 0, 0, 0], bind).into();
+    //let bind = "8080";//matches.value_of("port").unwrap();
+    //let bind = u16::from_str_radix(&bind, 10).expect("port must be a valid number");
+    let addr = ([0, 0, 0, 0], args.port).into();
 
     info!("starting exporter on {}", addr);
 
@@ -86,9 +168,11 @@ async fn main() -> Result<(), &'static str>{
         //std::process::exit(1);
         return Err("missing endpoints file")
     }*/
-    //let endpoints: &'static str = matches.value_of("endpoints").unwrap();
+//    let endpoints: &'static str = args.endpoints.as_str();
+        //let endpoints: &'static str = matches.value_of("endpoints").unwrap();
     //let endpoints = endpoints.unwrap();
-    
+    let endpoints = args.endpoints.clone();
+
     render_prometheus(addr, MyOptions::default(), move |request, options| {
         async move {
             trace!(
@@ -98,8 +182,9 @@ async fn main() -> Result<(), &'static str>{
             );
 
             //let endpoints = "/Users/pa/Nextcloud/basteln/rust-ssh-client/endpoints.csv";
+    //    //
 
-            let input = File::open(endpoints).unwrap();
+            let input = File::open(endpoints.as_str()).unwrap();
 
             let buffered = BufReader::new(input);
 

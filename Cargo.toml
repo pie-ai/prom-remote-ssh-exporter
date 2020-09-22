@@ -38,4 +38,8 @@ tokio = { version = "0.2", features = ["full"] }
 
 log                  = "0.4.8"
 env_logger           = "0.7.1"
-clap                 = "2.33.3"
+
+# command line parsing
+#clap                 = "2.33.3"
+#climake = "2.1"
+pico-args = "0.3.4"
