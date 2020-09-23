@@ -84,19 +84,22 @@ RUN cat Cargo.toml
 #RUN ls -la
 #COPY . .
 #RUN cargo build --release
-RUN cargo build
+RUN cargo build --release
 
 # Copy the source and build the application.
 #COPY Cargo.toml Cargo.lock ./
 #COPY src ./src
 #RUN cargo install --target aarch64-unknown-linux-musl --path .
 #RUN cargo install --path .
-RUN find .
+RUN ls -la ${WORKDIR}/target/release
 
 # Copy the statically-linked binary into a scratch container.
 #FROM scratch
 #FROM alpine
 FROM rust:1.44-buster
-COPY --from=build /usr/src/ssh-prometheus-exporter/target/release/de_pa2_rust_tests .
+ARG PROJECT_NAME="ssh-prometheus-exporter"
+ARG BASEDIR=/var/development/src
+ARG WORKDIR=${BASEDIR}/${PROJECT_NAME}
+COPY --from=build ${WORKDIR}/target/release/${PROJECT_NAME} rust-binary
 USER 1000
-CMD ["./de_pa2_rust_tests"]
+CMD ["./rust-binary"]
