@@ -118,3 +118,42 @@ pub fn usage(_session: &Session, _basedir: &str) -> Usage
     };
     return res;
 }
+
+#[derive(Debug, Default)]
+pub struct MemoryEntry {
+    pub name: String,
+    pub size: u64
+}
+
+#[derive(Debug, Default)]
+pub struct Memory {
+    pub attributes: Vec<MemoryEntry>
+}
+pub fn meminfo(_session: &Session) -> Memory
+{
+    let mut meminfo = exec("cat /proc/meminfo", &_session);
+    //println!("meminfo:\n====\n{}====", meminfo);
+    // MemTotal:        8002772 kB
+    // MemFree:          422012 kB
+    // MemAvailable:    6554824 kB
+    // Buffers:          202756 kB
+    // Cached:          5468388 kB
+    // SwapCached:            8 kB
+
+    let mut usages: Vec<MemoryEntry> = Vec::new();
+    for line in meminfo.lines()
+    {
+        let mut parts = line.split_whitespace();
+        let label = parts.next().unwrap();
+        let size = parts.next().unwrap();
+        //println!("{:?}: {:?}", label, size);
+
+        usages.push(MemoryEntry{
+            name: String::from(label),
+            size: size.parse::<u64>().unwrap()
+        });
+    }
+
+
+    return Memory{attributes: usages};
+}
