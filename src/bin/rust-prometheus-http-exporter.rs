@@ -48,10 +48,7 @@ async fn main() -> Result<(), &'static str>{
     {
         env::set_var("RUST_LOG","trace");
     } else {
-        env::set_var(
-            "RUST_LOG",
-            format!("folder_size=info,{}=info", "prometheus-exporter"),
-        );
+        env::set_var("RUST_LOG","info");
     }
 
     env_logger::init();
@@ -80,7 +77,7 @@ async fn main() -> Result<(), &'static str>{
             let load_15_metric = PrometheusMetric::new("load_15", MetricType::Counter, "system load 15 minute");
             let mut load_15_buf = load_15_metric.render_header();
 
-            let usage_metric = PrometheusMetric::new("usage", MetricType::Counter, "fs usage");
+            let usage_metric = PrometheusMetric::new("filesystem", MetricType::Counter, "fs usage");
             let mut usage_buf = usage_metric.render_header();
 
             let memory_metric = PrometheusMetric::new("memory", MetricType::Gauge, "memory usage");

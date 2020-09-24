@@ -158,3 +158,18 @@ pub fn meminfo(_session: &Session) -> Memory
     }
     return Memory{attributes: usages};
 }
+
+
+// --output: FIELD_LIST  is  a  comma-separated  list of columns to be included.  Valid field names are: 'source', 'fstype', 'itotal', 'iused',
+//        'iavail', 'ipcent', 'size', 'used', 'avail', 'pcent', 'file' and 'target' (see info page).
+
+// df -h -t ext4 -t vfat -l --output=size,used,avail,target
+// df -t ext4 -t vfat -l --output=size,used,avail,target
+/*
+
+1K-Blöcke Benutzt    Verf. Eingehängt auf
+ 29292924 5002084 22779800 /
+    64366   21530    42836 /boot
+
+ */
+
