@@ -131,7 +131,7 @@ pub struct Memory {
 }
 pub fn meminfo(_session: &Session) -> Memory
 {
-    let mut meminfo = exec("cat /proc/meminfo", &_session);
+    let meminfo = exec("cat /proc/meminfo", &_session);
     //println!("meminfo:\n====\n{}====", meminfo);
     // MemTotal:        8002772 kB
     // MemFree:          422012 kB
@@ -156,7 +156,5 @@ pub fn meminfo(_session: &Session) -> Memory
             size: size.parse::<u64>().unwrap()
         });
     }
-
-
     return Memory{attributes: usages};
 }

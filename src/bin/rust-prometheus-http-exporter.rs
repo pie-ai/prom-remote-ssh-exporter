@@ -1,7 +1,7 @@
 extern crate ssh_prometheus_exporter;
 
 use ssh_prometheus_exporter::ssh;
-use log::{info, trace};
+use log::{info, trace, debug};
 //, error};
 use prometheus_exporter_base::{render_prometheus, MetricType, PrometheusMetric};
 use serde::Deserialize;
@@ -46,10 +46,7 @@ async fn main() -> Result<(), &'static str>{
 
     if args.verbose
     {
-        env::set_var(
-            "RUST_LOG",
-            format!("folder_size=trace,{}=trace", "prometheus-exporter"),
-        );
+        env::set_var("RUST_LOG","trace");
     } else {
         env::set_var(
             "RUST_LOG",
@@ -92,6 +89,8 @@ async fn main() -> Result<(), &'static str>{
             for entry in rdr.deserialize() {
                 let record: Endpoint = entry?;
                 //println!("endpoint: {:?}", record.identifier);
+
+                debug!("connecting to {} via ssh", &record.hostname);
 
                 let sess = ssh::connect(&record.hostname,&record.port, &record.username, &record.password);
                 //let processes = ssh::exec("ps -aux", &sess);
