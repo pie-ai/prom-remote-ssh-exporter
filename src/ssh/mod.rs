@@ -3,13 +3,15 @@ extern crate ssh2;
 use ssh2::Session;
 use std::io::Read;
 use std::net::TcpStream;
+use log::{debug};
+
 
 pub fn connect(_hostname: &str, _port: &i32, _username: &str, _password: &str) -> Session {
     let addr = format!("{}:{}", _hostname, _port);
     let tcp = TcpStream::connect(addr).unwrap();
     let mut sess = Session::new().unwrap();
 
-    println!("connect: {}", _hostname);
+    debug!("connecting to: {}", _hostname);
 
     sess.set_tcp_stream(tcp);
     sess.handshake().unwrap();
