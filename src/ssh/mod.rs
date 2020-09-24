@@ -144,7 +144,10 @@ pub fn meminfo(_session: &Session) -> Memory
     for line in meminfo.lines()
     {
         let mut parts = line.split_whitespace();
-        let label = parts.next().unwrap();
+        // label: 'MemAvailable:'
+        let mut label = parts.next().unwrap();
+        // label: 'MemAvailable'
+        label = &label[..label.len()-1];
         let size = parts.next().unwrap();
         //println!("{:?}: {:?}", label, size);
 
