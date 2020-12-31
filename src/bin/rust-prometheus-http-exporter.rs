@@ -2,7 +2,6 @@ extern crate ssh_prometheus_exporter;
 
 use ssh_prometheus_exporter::ssh;
 use log::{info, trace, debug};
-//, error};
 use prometheus_exporter_base::{render_prometheus, MetricType, PrometheusMetric};
 use serde::Deserialize;
 use std::env;

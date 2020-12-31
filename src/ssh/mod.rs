@@ -3,7 +3,8 @@ extern crate ssh2;
 use ssh2::Session;
 use std::io::Read;
 use std::net::TcpStream;
-use log::{debug};
+use log::{debug, error};
+use std::error::Error;
 
 
 pub fn connect(_hostname: &str, _port: &i32, _username: &str, _password: &str) -> Session {
@@ -21,21 +22,72 @@ pub fn connect(_hostname: &str, _port: &i32, _username: &str, _password: &str) -
     return sess;
 }
 
+pub fn exec(_command: &str, _session: &Session) -> Result<String, Box<dyn Error>> {
+    let mut channel = match _session.channel_session()
+    {
+        Ok(c) => c,
+        Err(e)=>{
+            error!("could not get channel: {:?}", e);
+            return Err(Box::new(e) as Box<dyn std::error::Error>)
+        }
+    };
+    match channel.exec(_command)
+    {
+        Err(e)=>{
+            error!("could not exec command: {:?}", e);
+            return Err(Box::new(e) as Box<dyn std::error::Error>)
+        }
+        _ => {}
+    }
+    let mut s = String::new();
+    match channel.read_to_string(&mut s)
+    {
+        Err(e)=>{
+            error!("could not read response: {:?}", e);
+            return Err(Box::new(e) as Box<dyn std::error::Error>)
+        }
+        _ => {}
+    }
+    match channel.wait_close()
+    {
+        Err(e)=>{
+            error!("could not close channel: {:?}", e);
+            return Err(Box::new(e) as Box<dyn std::error::Error>)
+        }
+        _ => {}
+    }
+    return Ok(s);
+}
+/*
 pub fn exec(_command: &str, _session: &Session) -> String {
-    let mut channel = _session.channel_session().unwrap();
+    let mut channel = match _session.channel_session()
+    {
+      Ok(c) => c,
+        Err(e)=>{
+            error!("could not get channel: {:?}", e);
+            return String::new();
+        }
+    };
     channel.exec(_command).unwrap();
     let mut s = String::new();
     channel.read_to_string(&mut s).unwrap();
     channel.wait_close().map_err(|err| println!("{:?}", err)).ok();
     return s;
 }
+*/
 
 pub fn du(_session: &Session, _dir: &str) -> u32
 {
     let command = format!("du -s {}", _dir);
     //println!("command: {}", command);
-    let output = exec(&command, &_session);
-
+    let output = match exec(&command, &_session)
+    {
+        Err(e)=>{
+            error!("could not exec command: {:?}", e);
+            return 0;
+        }
+        Ok(o)=>o
+    };
     if output.len()==0
     {
         return 0;
@@ -56,7 +108,18 @@ pub struct LoadAverage {
 
 pub fn loadavg(_session: &Session) -> LoadAverage
 {
-    let loadavg = exec("cat /proc/loadavg", &_session);
+    let loadavg = match exec("cat /proc/loadavg", &_session)
+    {
+        Err(e)=>{
+            error!("could not check loadavg: {:?}", e);
+            return LoadAverage{
+                load1: -1.0,
+                load5: -1.0,
+                load15: -1.0
+            };
+        }
+        Ok(o)=>o
+    };
     //println!("loadavg:\n====\n{}====", loadavg);
 
     // Wert 1: Anzahl der Prozesse im Status R (lauffähig / runnable) oder D (auf I/O wartend / disk sleep) in der Run Queue als Durchschnitt über 1 Minute
@@ -98,7 +161,17 @@ pub fn usage(_session: &Session, _basedir: &str) -> Usage
     // find /srv/mail/mysql/data -type d -depth 1
     // _basedir
     let command = format!("ls -1d {}/*/", _basedir);
-    let inner_folders = exec(&command, &_session);
+    let inner_folders = match exec(&command, &_session)
+    {
+        Ok(folders) => folders,
+        Err(e) => {
+            error!("could not check usage: {:?}", e);
+            let usages: Vec<UsageEntry> = Vec::new();
+            return Usage{
+                attributes: usages
+            };
+        }
+    };
     //println!("inner_folders:\n====\n{}====", inner_folders);
     
     let mut usages: Vec<UsageEntry> = Vec::new();
@@ -133,7 +206,15 @@ pub struct Memory {
 }
 pub fn meminfo(_session: &Session) -> Memory
 {
-    let meminfo = exec("cat /proc/meminfo", &_session);
+    let meminfo = match exec("cat /proc/meminfo", &_session)
+    {
+        Ok(meminfo) => meminfo,
+        Err(e) => {
+        error!("could not check memusage: {:?}", e);
+        let usages: Vec<MemoryEntry> = Vec::new();
+        return Memory{attributes: usages};
+    }
+    };
     //println!("meminfo:\n====\n{}====", meminfo);
     // MemTotal:        8002772 kB
     // MemFree:          422012 kB
