@@ -17,7 +17,15 @@ pub fn connect(_hostname: &str, _port: &i32, _username: &str, _password: &str) -
     sess.set_tcp_stream(tcp);
     sess.handshake().unwrap();
 
-    sess.userauth_password(_username, _password).unwrap();
+    if _username.trim().is_empty()
+    {
+        // use agent
+        sess.userauth_agent(_username).unwrap();
+    }
+    else {
+        sess.userauth_password(_username, _password).unwrap();
+    }
+
     assert!(sess.authenticated());
     return sess;
 }

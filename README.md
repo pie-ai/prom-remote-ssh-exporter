@@ -12,12 +12,7 @@ localhorst,localhost,22,user,secret,/var/lib|/home/user/
 
 
 ````
-% docker run -v ./endpoints.csv:/etc/endpoints.csv pieai/prom-remote-ssh-exporter:latest /rust-binary --endpoints /etc/endpoints.csv
-````
-
-
-````
-% docker run -v ./endpoints.csv:/etc/endpoints.csv -p 6660 pieai/prom-remote-ssh-exporter:latest /rust-binary --endpoints /etc/endpoints.csv
+% docker run -v $(pwd)/endpoints.csv:/etc/endpoints.csv -p 6660:6660 pieai/prom-remote-ssh-exporter:latest /rust-binary --endpoints /etc/endpoints.csv
   ...
 % curl http://127.0.0.1:6660/metrics
 

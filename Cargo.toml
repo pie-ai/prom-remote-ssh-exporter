@@ -16,7 +16,7 @@ path = "src/bin/rust-prometheus-http-exporter.rs"
 
 [dependencies]
 # ssh connection
-ssh2 = "0.8"
+ssh2 = "0.9.0"
 
 # csv parsing
 csv = "1.1"

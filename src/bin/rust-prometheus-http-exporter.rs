@@ -67,13 +67,13 @@ async fn main() -> Result<(), &'static str>{
             let buffered = BufReader::new(input);
             let mut rdr = csv::Reader::from_reader(buffered);
             //println!("====example====");
-            let load_1_metric = PrometheusMetric::new("node_load_1", MetricType::Gauge, "system load 1 minute");
+            let load_1_metric = PrometheusMetric::new("node_load1", MetricType::Gauge, "system load 1 minute");
             let mut load_1_buf = load_1_metric.render_header();
 
-            let load_5_metric = PrometheusMetric::new("node_load_5", MetricType::Gauge, "system load 5 minute");
+            let load_5_metric = PrometheusMetric::new("node_load5", MetricType::Gauge, "system load 5 minute");
             let mut load_5_buf = load_5_metric.render_header();
             
-            let load_15_metric = PrometheusMetric::new("node_load_15", MetricType::Gauge, "system load 15 minute");
+            let load_15_metric = PrometheusMetric::new("node_load15", MetricType::Gauge, "system load 15 minute");
             let mut load_15_buf = load_15_metric.render_header();
 
             let usage_metric = PrometheusMetric::new("filesystem", MetricType::Gauge, "fs usage");
