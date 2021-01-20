@@ -33,8 +33,13 @@ pub fn connect(_hostname: &str, _port: &i32, _username: &str, _password: &str) -
 
 pub fn connect(_hostname: &str, _port: &i32, _username: &str, _password: &str) -> Result<Session, Box<dyn Error>>  {
     let addr = format!("{}:{}", _hostname, _port.to_string());
-    let mut socket_addr = addr.to_socket_addrs().unwrap();
-    //let socketAddress = SocketAddr::from(_hostname, _port);
+    let mut socket_addr = match addr.to_socket_addrs() {
+        Ok(sa) => sa,
+        Err(e)=>{
+            error!("could not parse seocket address: {:?}", e);
+            return Err(Box::new(e) as Box<dyn std::error::Error>)
+        }
+    };
 
     let tcp = match TcpStream::connect_timeout(&socket_addr.next().unwrap(), Duration::from_secs(10))
     {
