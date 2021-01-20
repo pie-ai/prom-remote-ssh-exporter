@@ -2,11 +2,12 @@ extern crate ssh2;
 
 use ssh2::Session;
 use std::io::Read;
-use std::net::TcpStream;
+use std::net::{TcpStream, SocketAddr, ToSocketAddrs};
 use log::{debug, error};
 use std::error::Error;
+use std::time::Duration;
 
-
+/*
 pub fn connect(_hostname: &str, _port: &i32, _username: &str, _password: &str) -> Session {
     let addr = format!("{}:{}", _hostname, _port);
     let tcp = TcpStream::connect(addr).unwrap();
@@ -28,6 +29,73 @@ pub fn connect(_hostname: &str, _port: &i32, _username: &str, _password: &str) -
 
     assert!(sess.authenticated());
     return sess;
+}*/
+
+pub fn connect(_hostname: &str, _port: &i32, _username: &str, _password: &str) -> Result<Session, Box<dyn Error>>  {
+    let addr = format!("{}:{}", _hostname, _port.to_string());
+    let mut socket_addr = addr.to_socket_addrs().unwrap();
+    //let socketAddress = SocketAddr::from(_hostname, _port);
+
+    let tcp = match TcpStream::connect_timeout(&socket_addr.next().unwrap(), Duration::from_secs(10))
+    {
+        Ok(c) => c,
+        Err(e)=>{
+            error!("could not connect: {:?}", e);
+            return Err(Box::new(e) as Box<dyn std::error::Error>)
+        }
+    };
+
+
+    let mut sess = match Session::new()
+    {
+        Ok(s)=>s,
+        Err(e)=>{
+            error!("could not create session: {:?}", e);
+            return Err(Box::new(e) as Box<dyn std::error::Error>)
+        }
+    };
+
+    debug!("connecting to: {}", _hostname);
+    sess.set_tcp_stream(tcp);
+
+    match sess.handshake()
+    {
+        Ok(s)=>s,
+        Err(e)=>{
+            error!("handshake failed: {:?}", e);
+            return Err(Box::new(e) as Box<dyn std::error::Error>)
+        }
+    }
+
+    if _username.trim().is_empty()
+    {
+        // use agent
+        match sess.userauth_agent(_username)
+        {
+            Ok(l)=>l,
+            Err(e)=>{
+                error!("user auth using agent failed: {:?}", e);
+                return Err(Box::new(e) as Box<dyn std::error::Error>)
+            }
+        }
+    }
+    else {
+        match sess.userauth_password(_username, _password) {
+            Ok(l)=>l,
+            Err(e)=>{
+                error!("user auth using password failed: {:?}", e);
+                return Err(Box::new(e) as Box<dyn std::error::Error>)
+            }
+        }
+    }
+
+    if sess.authenticated()
+    {
+        return Ok(sess);
+    }
+    else {
+        return Err(Box::from("not authenticated"));
+    }
 }
 
 pub fn exec(_command: &str, _session: &Session) -> Result<String, Box<dyn Error>> {

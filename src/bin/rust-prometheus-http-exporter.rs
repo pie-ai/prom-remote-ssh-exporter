@@ -1,13 +1,15 @@
 extern crate ssh_prometheus_exporter;
 
 use ssh_prometheus_exporter::ssh;
-use log::{info, trace, debug};
+use log::{info, trace};
 use prometheus_exporter_base::{render_prometheus, MetricType, PrometheusMetric};
 use serde::Deserialize;
 use std::env;
 use std::fs::File;
 use std::io::BufReader;
 use ssh::LoadAverage;
+use log::{debug, error};
+use ssh2::Session;
 
 #[derive(Debug, Clone, Default)]
 struct MyOptions {}
@@ -67,6 +69,10 @@ async fn main() -> Result<(), &'static str>{
             let buffered = BufReader::new(input);
             let mut rdr = csv::Reader::from_reader(buffered);
             //println!("====example====");
+
+            let connectable_metric = PrometheusMetric::new("connectable", MetricType::Gauge, "system is connectable using ssh");
+            let mut connectable_buf = connectable_metric.render_header();
+
             let load_1_metric = PrometheusMetric::new("node_load1", MetricType::Gauge, "system load 1 minute");
             let mut load_1_buf = load_1_metric.render_header();
 
@@ -84,15 +90,29 @@ async fn main() -> Result<(), &'static str>{
 
             for entry in rdr.deserialize() {
                 let record: Endpoint = entry?;
+                let mut attributes: Vec<(&str, &str)> = Vec::new();
                 //println!("endpoint: {:?}", record.identifier);
 
                 debug!("connecting to {} via ssh", &record.hostname);
 
-                let sess = ssh::connect(&record.hostname,&record.port, &record.username, &record.password);
+                let sess:(Session) = match ssh::connect(&record.hostname,&record.port, &record.username, &record.password)
+                {
+                    Ok(s)=>
+                        {
+                            connectable_buf.push_str(&*connectable_metric.render_sample(Some(attributes.as_slice()), 1));
+                            s
+                        }
+                    Err(e)=>
+                        {
+                            error!("could not connect: {:?}", e);
+                            connectable_buf.push_str(&*connectable_metric.render_sample(Some(attributes.as_slice()), 0));
+                            continue
+                        }
+                };
                 //let processes = ssh::exec("ps -aux", &sess);
                 //println!("processes:\n====\n{}====", processes);
 
-                let mut attributes: Vec<(&str, &str)> = Vec::new();
+
                 attributes.push(("host", &record.identifier));
                 
                 let load: LoadAverage = ssh::loadavg(&sess);
@@ -108,6 +128,7 @@ async fn main() -> Result<(), &'static str>{
                     {
                         let mut usage_attributes: Vec<(&str, &str)> = Vec::new();
                         usage_attributes.push(("host", &record.identifier));
+                        usage_attributes.push(("instance", &record.identifier));
                         usage_attributes.push(("folder",&entry.folder));
                         usage_buf.push_str(&usage_metric.render_sample(Some(usage_attributes.as_slice()),entry.size));
                     }
