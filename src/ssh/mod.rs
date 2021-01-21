@@ -2,34 +2,10 @@ extern crate ssh2;
 
 use ssh2::Session;
 use std::io::Read;
-use std::net::{TcpStream, SocketAddr, ToSocketAddrs};
+use std::net::{TcpStream, ToSocketAddrs};
 use log::{debug, error};
 use std::error::Error;
 use std::time::Duration;
-
-/*
-pub fn connect(_hostname: &str, _port: &i32, _username: &str, _password: &str) -> Session {
-    let addr = format!("{}:{}", _hostname, _port);
-    let tcp = TcpStream::connect(addr).unwrap();
-    let mut sess = Session::new().unwrap();
-
-    debug!("connecting to: {}", _hostname);
-
-    sess.set_tcp_stream(tcp);
-    sess.handshake().unwrap();
-
-    if _username.trim().is_empty()
-    {
-        // use agent
-        sess.userauth_agent(_username).unwrap();
-    }
-    else {
-        sess.userauth_password(_username, _password).unwrap();
-    }
-
-    assert!(sess.authenticated());
-    return sess;
-}*/
 
 pub fn connect(_hostname: &str, _port: &i32, _username: &str, _password: &str) -> Result<Session, Box<dyn Error>>  {
     let addr = format!("{}:{}", _hostname, _port.to_string());
@@ -139,23 +115,6 @@ pub fn exec(_command: &str, _session: &Session) -> Result<String, Box<dyn Error>
     }
     return Ok(s);
 }
-/*
-pub fn exec(_command: &str, _session: &Session) -> String {
-    let mut channel = match _session.channel_session()
-    {
-      Ok(c) => c,
-        Err(e)=>{
-            error!("could not get channel: {:?}", e);
-            return String::new();
-        }
-    };
-    channel.exec(_command).unwrap();
-    let mut s = String::new();
-    channel.read_to_string(&mut s).unwrap();
-    channel.wait_close().map_err(|err| println!("{:?}", err)).ok();
-    return s;
-}
-*/
 
 pub fn du(_session: &Session, _dir: &str) -> u32
 {
@@ -221,6 +180,50 @@ pub fn loadavg(_session: &Session) -> LoadAverage
     };
 
     return res;
+}
+
+#[derive(Debug, Default)]
+pub struct ThreadsAndCores {
+    pub threads: f32,
+    pub cores: f32,
+}
+
+pub fn cpuinfo(_session: &Session) -> ThreadsAndCores
+{
+    let loadavg = match exec("cat /proc/cpuinfo", &_session)
+    {
+        Err(e)=>{
+            error!("could not check cpuinfo: {:?}", e);
+            return ThreadsAndCores{
+                threads: -1.0,
+                cores: -1.0,
+            };
+        }
+        Ok(o)=>o
+    };
+
+    let mut  threads: f32 = 0.0;
+    let mut  cores: f32 = 0.0;
+
+    for l in loadavg.lines()
+    {
+        let mut line = l.to_string();
+        if line.starts_with("processor")
+        {
+            threads=threads+1.0;
+        }
+        else if line.starts_with("cpu cores")
+        {
+            let labelValue = line.split(&[':'][..]);
+            //TODO implement getting value of line as cores count
+        }
+
+    }
+
+    return ThreadsAndCores{
+        threads: -1.0,
+        cores: -1.0,
+    };
 }
 
 

@@ -68,7 +68,6 @@ async fn main() -> Result<(), &'static str>{
             let input = File::open(endpoints.as_str()).unwrap();
             let buffered = BufReader::new(input);
             let mut rdr = csv::Reader::from_reader(buffered);
-            //println!("====example====");
 
             let connectable_metric = PrometheusMetric::new("connectable", MetricType::Gauge, "system is connectable using ssh");
             let mut connectable_buf = connectable_metric.render_header();
@@ -88,10 +87,12 @@ async fn main() -> Result<(), &'static str>{
             let memory_metric = PrometheusMetric::new("memory", MetricType::Gauge, "memory usage");
             let mut memory_buf = memory_metric.render_header();
 
+            let machine_cpu_threads_metric = PrometheusMetric::new("machine_cpu_threads", MetricType::Gauge, "cpu thread count");
+            let mut machine_cpu_threads_buf = machine_cpu_threads_metric.render_header();
+
             for entry in rdr.deserialize() {
                 let record: Endpoint = entry?;
                 let mut attributes: Vec<(&str, &str)> = Vec::new();
-                //println!("endpoint: {:?}", record.identifier);
 
                 debug!("connecting to {} via ssh", &record.hostname);
 
@@ -114,11 +115,17 @@ async fn main() -> Result<(), &'static str>{
 
 
                 attributes.push(("host", &record.identifier));
-                
+                attributes.push(("instance", &record.identifier));
+
+                // load
                 let load: LoadAverage = ssh::loadavg(&sess);
                 load_1_buf.push_str(&load_1_metric.render_sample(Some(attributes.as_slice()), load.load1));
                 load_5_buf.push_str(&load_5_metric.render_sample(Some(attributes.as_slice()), load.load5));
                 load_15_buf.push_str(&load_15_metric.render_sample(Some(attributes.as_slice()), load.load15));
+
+                // cpuinfo
+                let cpuinfo = ssh::cpuinfo(&sess);
+                machine_cpu_threads_buf.push_str(&machine_cpu_threads_metric.render_sample(Some(attributes.as_slice()), cpuinfo.threads));
 
                 for u in record.usage.split("|")
                 {
@@ -141,15 +148,19 @@ async fn main() -> Result<(), &'static str>{
                     let mut memory_attributes: Vec<(&str, &str)> = Vec::new();
                     memory_attributes.push(("type", &entry.name));
                     memory_attributes.push(("host", &record.identifier));
+                    memory_attributes.push(("instance", &record.identifier));
                     memory_buf.push_str(&memory_metric.render_sample(Some(memory_attributes.as_slice()),entry.size));
                 }
             }
 
-            let mut s = load_1_buf;
+            let mut s = connectable_buf;
+            s.push_str(&load_1_buf);
             s.push_str(&load_5_buf);
             s.push_str(&load_15_buf);
             s.push_str(&usage_buf);
             s.push_str(&memory_buf);
+            s.push_str(&machine_cpu_threads_buf);
+
             Ok(s)
         }
     })
