@@ -221,8 +221,8 @@ pub fn cpuinfo(_session: &Session) -> ThreadsAndCores
     }
 
     return ThreadsAndCores{
-        threads: -1.0,
-        cores: -1.0,
+        threads,
+        cores,
     };
 }
 
