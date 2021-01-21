@@ -127,17 +127,20 @@ async fn main() -> Result<(), &'static str>{
                 let cpuinfo = ssh::cpuinfo(&sess);
                 machine_cpu_threads_buf.push_str(&machine_cpu_threads_metric.render_sample(Some(attributes.as_slice()), cpuinfo.threads));
 
-                for u in record.usage.split("|")
+                if ! record.usage.trim().is_empty()
                 {
-                    let usage = ssh::usage(&sess,&u);
-
-                    for entry in usage.attributes
+                    for u in record.usage.split("|")
                     {
-                        let mut usage_attributes: Vec<(&str, &str)> = Vec::new();
-                        usage_attributes.push(("host", &record.identifier));
-                        usage_attributes.push(("instance", &record.identifier));
-                        usage_attributes.push(("folder",&entry.folder));
-                        usage_buf.push_str(&usage_metric.render_sample(Some(usage_attributes.as_slice()),entry.size));
+                        let usage = ssh::usage(&sess,&u);
+
+                        for entry in usage.attributes
+                        {
+                            let mut usage_attributes: Vec<(&str, &str)> = Vec::new();
+                            usage_attributes.push(("host", &record.identifier));
+                            usage_attributes.push(("instance", &record.identifier));
+                            usage_attributes.push(("folder",&entry.folder));
+                            usage_buf.push_str(&usage_metric.render_sample(Some(usage_attributes.as_slice()),entry.size));
+                        }
                     }
                 }
 
