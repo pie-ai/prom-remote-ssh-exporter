@@ -1,4 +1,4 @@
-FROM rust:1.44-buster AS build
+FROM rust:1.45-buster AS build
 
 # base utils
 # https://github.com/killercup/cargo-edit

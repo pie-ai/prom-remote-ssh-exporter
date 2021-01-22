@@ -214,7 +214,7 @@ pub fn cpuinfo(_session: &Session) -> ThreadsAndCores
         }
         else if line.starts_with("cpu cores")
         {
-            let labelValue = line.split(&[':'][..]);
+            let label_value = line.split(&[':'][..]);
             //TODO implement getting value of line as cores count
         }
 

@@ -10,6 +10,8 @@ use std::io::BufReader;
 use ssh::LoadAverage;
 use log::{debug, error};
 use ssh2::Session;
+//use std::path::Path;
+
 
 #[derive(Debug, Clone, Default)]
 struct MyOptions {}
@@ -65,6 +67,12 @@ async fn main() -> Result<(), &'static str>{
                 request,
                 options
             );
+/*
+            if ! Path::new(endpoints.as_str()).exists()
+            {
+                Ok("# could not open endpoints file");
+            }
+*/
             let input = File::open(endpoints.as_str()).unwrap();
             let buffered = BufReader::new(input);
             let mut rdr = csv::Reader::from_reader(buffered);
@@ -115,7 +123,7 @@ async fn main() -> Result<(), &'static str>{
 
 
                 attributes.push(("host", &record.identifier));
-                attributes.push(("instance", &record.identifier));
+                //attributes.push(("instance", &record.identifier));
 
                 // load
                 let load: LoadAverage = ssh::loadavg(&sess);
@@ -137,7 +145,7 @@ async fn main() -> Result<(), &'static str>{
                         {
                             let mut usage_attributes: Vec<(&str, &str)> = Vec::new();
                             usage_attributes.push(("host", &record.identifier));
-                            usage_attributes.push(("instance", &record.identifier));
+                            //usage_attributes.push(("instance", &record.identifier));
                             usage_attributes.push(("folder",&entry.folder));
                             usage_buf.push_str(&usage_metric.render_sample(Some(usage_attributes.as_slice()),entry.size));
                         }
@@ -151,7 +159,7 @@ async fn main() -> Result<(), &'static str>{
                     let mut memory_attributes: Vec<(&str, &str)> = Vec::new();
                     memory_attributes.push(("type", &entry.name));
                     memory_attributes.push(("host", &record.identifier));
-                    memory_attributes.push(("instance", &record.identifier));
+                    //memory_attributes.push(("instance", &record.identifier));
                     memory_buf.push_str(&memory_metric.render_sample(Some(memory_attributes.as_slice()),entry.size));
                 }
             }
