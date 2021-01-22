@@ -48,7 +48,7 @@ pub fn connect(_hostname: &str, _port: &i32, _username: &str, _password: &str) -
         }
     }
 
-    if _username.trim().is_empty()
+    if _password.trim().is_empty()
     {
         // use agent
         match sess.userauth_agent(_username)
